@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Management System</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+
+<body class="container py-4">
+
+<div class="header">
+  <h2>🎓 Student Management System</h2>
+  <p>Midterm Activity 3 – JavaScript CRUD</p>
+</div>
+
+<!-- FORM -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form id="studentForm" class="row g-3">
+
+      <div class="col-md-4">
+        <label class="form-label">Student ID</label>
+        <input type="text" id="studentId" class="form-control" readonly>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Last Name</label>
+        <input type="text" id="lastName" class="form-control">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">First Name</label>
+        <input type="text" id="firstName" class="form-control">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Middle Name</label>
+        <input type="text" id="middleName" class="form-control">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Birthdate</label>
+        <input type="date" id="birthdate" class="form-control">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Course</label>
+        <select id="course" class="form-select">
+          <option value="">Select Course</option>
+          <option>BSIT</option>
+          <option>BSCS</option>
+          <option>BSEMC</option>
+          <option>BSA</option>
+          <option>BSBA</option>
+          <option>BSHM</option>
+          <option>BSTM</option>
+          <option>BEED</option>
+          <option>BSED</option>
+          <option>BSN</option>
+          <option>Criminology</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Year Level</label>
+        <select id="yearLevel" class="form-select">
+          <option value="">Select Year Level</option>
+          <option>1st Year</option>
+          <option>2nd Year</option>
+          <option>3rd Year</option>
+          <option>4th Year</option>
+        </select>
+      </div>
+
+      <div class="col-12 text-end">
+        <button class="btn btn-primary px-4" id="submitBtn">
+          <i class="bi bi-plus-circle"></i> Add Student
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="card">
+  <div class="card-body">
+    <table class="table table-bordered table-hover">
+      <thead class="table-primary">
+        <tr>
+          <th>#</th>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Course</th>
+          <th>Year Level</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById("studentForm");
+const table = document.getElementById("studentTable");
+const submitBtn = document.getElementById("submitBtn");
+
+const studentId = document.getElementById("studentId");
+const lastName = document.getElementById("lastName");
+const firstName = document.getElementById("firstName");
+const middleName = document.getElementById("middleName");
+const birthdate = document.getElementById("birthdate");
+const course = document.getElementById("course");
+const yearLevel = document.getElementById("yearLevel");
+
+let students = [];
+let editIndex = null;
+let nextId = 1;
+
+function generateStudentId() {
+  const year = new Date().getFullYear();
+  studentId.value = `${year}-${String(nextId).padStart(4, '0')}`;
+}
+
+// Generate initial student ID
+generateStudentId();
+
+function calculateAge(date) {
+  const birth = new Date(date);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function displayStudents() {
+  table.innerHTML = "";
+
+  students.forEach((s, i) => {
+    const age = calculateAge(s.birthdate);
+    const row = document.createElement("tr");
+    if (age < 18) row.classList.add("minor");
+
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${s.studentId}</td>
+      <td>${s.lastName}, ${s.firstName} ${s.middleName}</td>
+      <td>${age}</td>
+      <td>${s.course}</td>
+      <td>${s.yearLevel}</td>
+      <td>
+        <button class="btn btn-warning btn-sm" onclick="editStudent(${i})">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStudent(${i})">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    `;
+    table.appendChild(row);
+  });
+}
+
+form.addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  if (!lastName.value || !firstName.value || !birthdate.value || !course.value || !yearLevel.value) {
+    alert("Please fill in all required fields.");
+    return;
+  }
+
+  const student = {
+    studentId: studentId.value,
+    lastName: lastName.value,
+    firstName: firstName.value,
+    middleName: middleName.value,
+    birthdate: birthdate.value,
+    course: course.value,
+    yearLevel: yearLevel.value
+  };
+
+  if (editIndex === null) {
+    students.push(student);
+    nextId++;
+  } else {
+    students[editIndex] = student;
+    editIndex = null;
+    submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Add Student';
+  }
+
+  form.reset();
+  generateStudentId();
+  displayStudents();
+});
+
+function editStudent(index) {
+  const s = students[index];
+  studentId.value = s.studentId;
+  lastName.value = s.lastName;
+  firstName.value = s.firstName;
+  middleName.value = s.middleName;
+  birthdate.value = s.birthdate;
+  course.value = s.course;
+  yearLevel.value = s.yearLevel;
+
+  editIndex = index;
+  submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Update Student';
+}
+
+function deleteStudent(index) {
+  if (confirm("Delete this student?")) {
+    students.splice(index, 1);
+    displayStudents();
+  }
+}
+</script>
+
+</body>
+</html>
