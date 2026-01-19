@@ -7,13 +7,21 @@
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-<link href="styles.css" rel="stylesheet">
-<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+
+<style>
+#studentId[readonly] {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+.minor {
+  background-color: #fff3cd;
+}
+</style>
 </head>
 
 <body class="container py-4">
 
-<div class="header">
+<div class="header mb-3">
   <h2>🎓 Student Management System</h2>
   <p>Midterm Activity 3 – JavaScript CRUD</p>
 </div>
@@ -24,18 +32,18 @@
     <form id="studentForm" class="row g-3">
 
       <div class="col-md-4">
-        <label class="form-label">Student ID</label>
+        <label class="form-label">Student ID (Edit Only)</label>
         <input type="text" id="studentId" class="form-control" readonly>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">Last Name</label>
-        <input type="text" id="lastName" class="form-control">
+        <input type="text" id="lastName" class="form-control" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">First Name</label>
-        <input type="text" id="firstName" class="form-control">
+        <input type="text" id="firstName" class="form-control" required>
       </div>
 
       <div class="col-md-4">
@@ -45,12 +53,12 @@
 
       <div class="col-md-4">
         <label class="form-label">Birthdate</label>
-        <input type="date" id="birthdate" class="form-control">
+        <input type="date" id="birthdate" class="form-control" required>
       </div>
 
       <div class="col-md-4">
         <label class="form-label">Course</label>
-        <select id="course" class="form-select">
+        <select id="course" class="form-select" required>
           <option value="">Select Course</option>
           <option>BSIT</option>
           <option>BSCS</option>
@@ -68,7 +76,7 @@
 
       <div class="col-md-4">
         <label class="form-label">Year Level</label>
-        <select id="yearLevel" class="form-select">
+        <select id="yearLevel" class="form-select" required>
           <option value="">Select Year Level</option>
           <option>1st Year</option>
           <option>2nd Year</option>
@@ -122,15 +130,6 @@ const yearLevel = document.getElementById("yearLevel");
 
 let students = [];
 let editIndex = null;
-let nextId = 1;
-
-function generateStudentId() {
-  const year = new Date().getFullYear();
-  studentId.value = `${year}-${String(nextId).padStart(4, '0')}`;
-}
-
-// Generate initial student ID
-generateStudentId();
 
 function calculateAge(date) {
   const birth = new Date(date);
@@ -151,7 +150,7 @@ function displayStudents() {
 
     row.innerHTML = `
       <td>${i + 1}</td>
-      <td>${s.studentId}</td>
+      <td>${s.studentId || "-"}</td>
       <td>${s.lastName}, ${s.firstName} ${s.middleName}</td>
       <td>${age}</td>
       <td>${s.course}</td>
@@ -172,13 +171,13 @@ function displayStudents() {
 form.addEventListener("submit", function(e) {
   e.preventDefault();
 
-  if (!lastName.value || !firstName.value || !birthdate.value || !course.value || !yearLevel.value) {
-    alert("Please fill in all required fields.");
+  if (editIndex !== null && !studentId.value.trim()) {
+    alert("Student ID is required when editing.");
     return;
   }
 
   const student = {
-    studentId: studentId.value,
+    studentId: studentId.value.trim(),
     lastName: lastName.value,
     firstName: firstName.value,
     middleName: middleName.value,
@@ -189,21 +188,25 @@ form.addEventListener("submit", function(e) {
 
   if (editIndex === null) {
     students.push(student);
-    nextId++;
   } else {
     students[editIndex] = student;
     editIndex = null;
-    submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Add Student';
   }
 
   form.reset();
-  generateStudentId();
+  studentId.value = "";
+  studentId.setAttribute("readonly", true);
+  submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Add Student';
+
   displayStudents();
 });
 
 function editStudent(index) {
   const s = students[index];
+
   studentId.value = s.studentId;
+  studentId.removeAttribute("readonly"); // ✏️ enable input
+
   lastName.value = s.lastName;
   firstName.value = s.firstName;
   middleName.value = s.middleName;
